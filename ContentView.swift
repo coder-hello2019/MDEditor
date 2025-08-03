@@ -37,7 +37,6 @@ class ViewModel: ObservableObject {
         
         // Trigger the View redraw
         self.mutableAString = newAttributedString
-        fetchAttribsAtLocation(location: self.userSelectedRange.location, attributedString: self.mutableAString)
     }
     
     func updateSelectedRange(inputRange: NSRange) -> Void {
@@ -203,53 +202,6 @@ func extractAttribsWithRanges(attributedString: NSAttributedString) -> [([NSAttr
     }
     
     return attributesArray
-}
-
-
-// Helper function to find the new range of a substring after text modifications
-func findNewRange(of substring: String, in newText: String, near oldLocation: Int) -> NSRange? {
-    let nsNewText = newText as NSString
-    
-    // Ensure oldLocation is within valid bounds
-    let safeOldLocation = min(max(0, oldLocation), newText.count)
-    
-    // Define a valid search range, ensuring we don't exceed newText bounds
-    let searchStart = max(0, safeOldLocation - 5)
-    let searchEnd = min(newText.count, safeOldLocation + substring.count + 5)
-    
-    let searchRange = NSRange(location: searchStart, length: searchEnd - searchStart)
-    
-    // Attempt to find the new location of the substring
-    let newLocation = nsNewText.range(of: substring, options: [], range: searchRange).toOptional()
-    
-    // Ensure we return a valid range only if the substring was found
-    guard let foundRange = newLocation else { return nil }
-    
-    return NSRange(location: foundRange.location, length: substring.count)
-}
-
-// Extension to safely convert NSRange to optional values
-extension NSRange {
-    func toOptional() -> NSRange? {
-        return location != NSNotFound ? self : nil
-    }
-}
-
-// Func that returns all the attributes applied at hte specified location
-func fetchAttribsAtLocation(location: Int, attributedString: NSAttributedString) -> [NSAttributedString.Key: Any] {
-//    print("inside fetchAttribsAtLocation for location: \(location), attributedString: \(attributedString)")
-//    var rangePointer = NSRange(location: location, length: 1)
-//    print("rangePointer: \(rangePointer.location), \(rangePointer.length)")   
-//    
-//    // retrieve attributes
-//    let attributes = attributedString.attributes(at: 0, effectiveRange: nil)
-//    print("attributes.count: \(attributes.count)")
-//    
-//    // iterate each attribute
-//    for attr in attributes {
-//        print("key: \(attr.key), val: \(attr.value))")
-//    }
-    return [:]
 }
 
 // MARK: helper funcs and structs
