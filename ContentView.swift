@@ -43,15 +43,6 @@ class ViewModel: ObservableObject {
         self.userSelectedRange = inputRange
     }
     
-    /*
-     Returns typingAttributes that should be applied in UITextView, based on relevant attributes of self.mutableAString. This will ensure that if new text is typed in the middle of already-formatted text, then that new text will inherit the attributes of the text that it is in the middle of.
-     
-     Attributes will only be returned if the text at self.userSelectedRange actually applies any attributes (other than the default).
-     */
-    func provideTypingAttributes() -> Void {
-        
-    }
-    
     func bold() -> Void {
         let copyString = self.mutableAString
         // Save the existing attributes of the String being bolded.
@@ -94,11 +85,11 @@ struct AttributedStringView: UIViewRepresentable {
         let typingAttributes = [NSMutableAttributedString.Key.font: UIFont.systemFont(ofSize: 72.0)]
         uiTextView.typingAttributes = typingAttributes
         
-//        var rangePts = NSRange(location: 0, length: mutableAString.length)
-//        print("typing attribts in makeUIView before setting: \(uiTextView.typingAttributes)")
-//        uiTextView.typingAttributes = mutableAString.attributes(at: 0, effectiveRange: &rangePts)
+        //        var rangePts = NSRange(location: 0, length: mutableAString.length)
+        //        print("typing attribts in makeUIView before setting: \(uiTextView.typingAttributes)")
+        //        uiTextView.typingAttributes = mutableAString.attributes(at: 0, effectiveRange: &rangePts)
         print("typing attribts in makeUIView after setting: \(uiTextView.typingAttributes)")
-
+        
         
         return uiTextView
     }
@@ -107,7 +98,7 @@ struct AttributedStringView: UIViewRepresentable {
         //        print("updateUIView called \(Date.now.timeIntervalSince1970)")
         let range = uiView.selectedRange
         let offset = uiView.contentOffset
-
+        
         print("inside updateUIView")
         if uiView.attributedText != viewModel.mutableAString {
             uiView.attributedText = viewModel.mutableAString
@@ -128,11 +119,11 @@ class Coordinator: NSObject, UITextViewDelegate {
     
     func textViewDidChange(_ textView: UITextView) {
         //        print("textViewDidChange before viewModel.updateString at \(Date.now.timeIntervalSince1970)")
-//        viewModel.updateString(input: textView.text)
+        //        viewModel.updateString(input: textView.text)
         print("inside textViewDidChange")
         viewModel.updateStringTest(input: textView.text)
         self.originalRange = textView.selectedRange
-                //        print("textViewDidChange after viewModel.updateString at \(Date.now.timeIntervalSince1970)")
+        //        print("textViewDidChange after viewModel.updateString at \(Date.now.timeIntervalSince1970)")
     }
     
     func textViewDidChangeSelection(_ textView: UITextView) {
