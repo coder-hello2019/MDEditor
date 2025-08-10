@@ -44,26 +44,78 @@ class ViewModel: ObservableObject {
     }
     
     func bold() -> Void {
-        let copyString = self.mutableAString
-        // Save the existing attributes of the String being bolded.
-        let copyStringAttributes = extractAttribsWithRanges(attributedString: copyString)
-        
-        // Create a brand new String to bold. If this completely new string isn't created from copyString, the view does not refresh. I think this is because copyString is a reference type, so assigning a new referece to nsAttributedString isn't enough to trigger a view refresh.
-        let newAttributedString = NSMutableAttributedString(string: copyString.string)
-        
-        // Iterate over the existing attributes of the String whose part is being bolded, and 're-add' them to the new String.
-        for attrib in copyStringAttributes {
-            newAttributedString.addAttributes(attrib.0, range: attrib.1)
+        // Validate the selected range
+        guard userSelectedRange.location != NSNotFound,
+              userSelectedRange.location >= 0,
+              userSelectedRange.location + userSelectedRange.length <= mutableAString.length else {
+            print("Invalid selection range")
+            return
         }
         
-        // Add the bold attribute to the new String.
-        newAttributedString.addAttributes([NSMutableAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 72.0)], range: self.userSelectedRange)
+        // Handle empty selection (cursor position)
+        if userSelectedRange.length == 0 {
+            print("No text selected - bold formatting will apply to future typing")
+            return
+        }
         
-        // Assign the new String to self.mutableAString to trigger a View re-draw.
+        // Create a new attributed string to trigger view update
+        let newAttributedString = NSMutableAttributedString(attributedString: mutableAString)
+        
+        // Check if the selected range is currently bold
+        let isBoldRange = isRangeBold(in: newAttributedString, range: userSelectedRange)
+        
+        if isBoldRange {
+            // Remove bold formatting from the selected range
+            removeBoldFromRange(in: newAttributedString, range: userSelectedRange)
+        } else {
+            // Add bold formatting to the selected range
+            addBoldToRange(in: newAttributedString, range: userSelectedRange)
+        }
+        
+        // Update the published property to trigger view refresh
         self.mutableAString = newAttributedString
+    }
+    
+    private func isRangeBold(in attributedString: NSAttributedString, range: NSRange) -> Bool {
+        var isBold = true
         
+        // Check each character in the range
+        attributedString.enumerateAttribute(.font, in: range, options: []) { (value, range, stop) in
+            if let font = value as? UIFont {
+                // Check if this font is bold - if any characters are not bold, return false
+                if !font.fontDescriptor.symbolicTraits.contains(.traitBold) {
+                    isBold = false
+                    stop.pointee = true
+                }
+            } else {
+                // No font attribute means it's not bold
+                isBold = false
+                stop.pointee = true
+            }
+        }
+        
+        return isBold
+    }
+    
+    private func addBoldToRange(in attributedString: NSMutableAttributedString, range: NSRange) {
+        // Apply bold font to the entire range
+        attributedString.enumerateAttribute(.font, in: range, options: []) { (value, subRange, _) in
+            let currentFont = value as? UIFont ?? UIFont.systemFont(ofSize: 72.0)
+            let boldFont = UIFont.boldSystemFont(ofSize: currentFont.pointSize)
+            attributedString.addAttribute(.font, value: boldFont, range: subRange)
+        }
+    }
+    
+    private func removeBoldFromRange(in attributedString: NSMutableAttributedString, range: NSRange) {
+        // Remove bold formatting from the entire range
+        attributedString.enumerateAttribute(.font, in: range, options: []) { (value, subRange, _) in
+            let currentFont = value as? UIFont ?? UIFont.systemFont(ofSize: 72.0)
+            let regularFont = UIFont.systemFont(ofSize: currentFont.pointSize)
+            attributedString.addAttribute(.font, value: regularFont, range: subRange)
+        }
     }
 }
+
 
 struct AttributedStringView: UIViewRepresentable {
     //TODO: think we might need to add a separate line for mutableAString here
@@ -99,7 +151,7 @@ struct AttributedStringView: UIViewRepresentable {
         let range = uiView.selectedRange
         let offset = uiView.contentOffset
         
-        print("inside updateUIView")
+//        print("inside updateUIView")
         if uiView.attributedText != viewModel.mutableAString {
             uiView.attributedText = viewModel.mutableAString
             uiView.selectedRange = range
@@ -118,12 +170,11 @@ class Coordinator: NSObject, UITextViewDelegate {
     }
     
     func textViewDidChange(_ textView: UITextView) {
-        //        print("textViewDidChange before viewModel.updateString at \(Date.now.timeIntervalSince1970)")
-        //        viewModel.updateString(input: textView.text)
-        print("inside textViewDidChange")
+
+//        print("inside textViewDidChange")
         viewModel.updateStringTest(input: textView.text)
         self.originalRange = textView.selectedRange
-        //        print("textViewDidChange after viewModel.updateString at \(Date.now.timeIntervalSince1970)")
+
     }
     
     func textViewDidChangeSelection(_ textView: UITextView) {
